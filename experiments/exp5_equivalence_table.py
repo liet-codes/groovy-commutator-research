@@ -17,9 +17,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import numpy as np
 import csv
-from src.eca import ECA
-from src.operators import groovy_commutator
-from src.measures import shannon_entropy, spatial_correlation_length, compressibility
+from src.eca import step
+from src.operators import G as groovy_commutator_op
+from src.measures import shannon_entropy, spatial_correlation_length, compressibility_ratio as compressibility
 from src.affine import affine_decompose
 
 # 88 equivalence class representatives (standard ordering)
@@ -124,7 +124,6 @@ def run():
     for rep in sorted(classes.keys()):
         equiv = classes[rep]
         wclass = WOLFRAM_CLASS.get(rep, '?')
-        eca = ECA(rep, N)
 
         # --- Single black cell test ---
         single_cell = np.zeros(N, dtype=np.uint8)
@@ -133,11 +132,11 @@ def run():
 
         g_nonzero_single = False
         for t in range(T):
-            g = groovy_commutator(state, rep, N)
+            g = groovy_commutator_op(state, rep)
             if np.any(g):
                 g_nonzero_single = True
                 break
-            state = eca.step(state)
+            state = step(state, rep)
 
         # --- Random IC tests ---
         g_nonzero_count = 0
@@ -154,14 +153,14 @@ def run():
             g_entropy_series = []
             
             for t in range(T):
-                g = groovy_commutator(state, rep, N)
+                g = groovy_commutator_op(state, rep)
                 
                 if t >= T_DISCARD:
                     if np.any(g):
                         g_ever_nonzero = True
                     g_entropy_series.append(shannon_entropy(g))
                 
-                state = eca.step(state)
+                state = step(state, rep)
             
             if g_ever_nonzero:
                 g_nonzero_count += 1
@@ -171,7 +170,7 @@ def run():
                 
                 # Compute final G for correlation/compression
                 final_state = state
-                final_g = groovy_commutator(final_state, rep, N)
+                final_g = groovy_commutator_op(final_state, rep)
                 corr_lengths.append(spatial_correlation_length(final_g))
                 compressibilities.append(compressibility(final_g))
                 
@@ -181,7 +180,9 @@ def run():
                 periodicity_results.append(period)
 
         # Affine decomposition
-        affine_base, perturbation, pert_weight = affine_decompose(rep)
+        ad = affine_decompose(rep)
+        affine_base = ad['best_affine_name']
+        pert_weight = ad['perturbation_weight']
 
         result = {
             'representative': rep,
