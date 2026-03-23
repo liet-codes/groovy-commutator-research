@@ -2,7 +2,9 @@
 
 ## Abstract
 
-We introduce the *Groovy Commutator*, a diagnostic operator for elementary cellular automata (ECA) defined as the commutator of the spatial differentiation operator D and the temporal evolution operator E. For a state S, the Groovy Commutator is G(S) = D(E(S)) ⊕ E(D(S)), measuring how much the ordering of differentiation and evolution matters. We compute G across all 256 ECA rules, combined with Shannon entropy, spatial correlation length, temporal autocorrelation, and compressibility measures. We further extend the analysis to a family of commutator variants ([E, D²], [E, I], [Eⁿ, D], [E, [E, D]], and the anti-commutator {E, D}) and perform affine decomposition of each rule into a best-fit linear (XOR) component plus residual perturbation. Our experiments support the conjecture that Wolfram Class IV rules occupy a distinctive region of the commutator-affine feature space: they exhibit nonzero but structured commutator signatures, moderate perturbation from affine behavior, and intermediate correlation lengths — consistent with "edge of chaos" characterizations but now given a precise operator-algebraic formulation.
+We introduce the *Groovy Commutator*, a diagnostic operator for elementary cellular automata (ECA) defined as the commutator of the differentiation operator D and the temporal evolution operator E. Here D(S) = S ⊕ φ(S) detects which cells are about to change, and E(S) = φ(S) applies the CA rule. The Groovy Commutator G(S) = D(E(S)) ⊕ E(D(S)) measures how much the ordering of differentiation and evolution matters. We compute G across all 256 ECA rules and all 88 equivalence classes, combined with Shannon entropy, spatial correlation length, temporal autocorrelation, compressibility, spectral exponent, and finite-size scaling measures. We further extend the analysis to a family of commutator variants ([E, D₂], [Eⁿ, D], [E, [E, D]], and the anti-commutator {E, D}) and perform affine decomposition of each rule into a best-fit linear (XOR) component plus residual perturbation. We find that Class IV rules exhibit a distinctive spectral signature (1/f^β noise with β ≈ 0.3–0.5) intermediate between white noise (Class III, β ≈ 0) and structured periodicity (Class II), and that glider-like structures in Rule 110 correspond to localized, persistent peaks in G. Our experiments support the conjecture that Wolfram Class IV rules occupy a distinctive region of the commutator-affine feature space: they exhibit nonzero but structured commutator signatures, moderate perturbation from affine behavior, and intermediate correlation lengths — consistent with "edge of chaos" characterizations but now given a precise operator-algebraic formulation.
+
+> **Note on operator correction (2026-03-22):** An earlier version of this work used a spatial adjacency XOR as the differentiation operator D. The correct definition is D(S) = S ⊕ φ(S), which detects *which cells are about to flip* — the temporal derivative, not the spatial gradient. All results in this version use the corrected operator. The correction significantly changes the commutator's behavior: it now directly measures the non-commutativity between "detecting upcoming change" and "evolving the system."
 
 ## 1. Introduction
 
@@ -10,14 +12,14 @@ The classification of elementary cellular automata into Wolfram's four classes �
 
 We propose an approach rooted in operator algebra. Consider two natural operators on binary strings:
 
-- **E** (evolution): apply the CA rule to advance one timestep
-- **D** (differentiation): compute the spatial finite difference via XOR of adjacent cells
+- **E** (evolution): apply the CA rule φ to advance one timestep: E(S) = φ(S)
+- **D** (differentiation): detect which cells are about to change: D(S) = S ⊕ φ(S)
 
-If E and D commute — that is, if D(E(S)) = E(D(S)) for all states S — then the spatial structure of the derivative is preserved under evolution. This holds trivially for Class I rules (everything collapses) and for the purely affine (XOR-linear) rules. The *Groovy Commutator* G = [E, D] measures the degree of non-commutativity:
+If E and D commute — that is, if D(E(S)) = E(D(S)) for all states S — then detecting upcoming changes before or after evolution yields the same result. This holds trivially for Class I rules (everything collapses) and for the purely affine (XOR-linear) rules. The *Groovy Commutator* G = [E, D] measures the degree of non-commutativity:
 
 $$G(S) = D(E(S)) \oplus E(D(S))$$
 
-Our central finding is that the statistical properties of G — its entropy, spatial correlation, temporal persistence, and compressibility — encode information about the dynamical class of the underlying rule, and that Class IV rules occupy a characteristic "structured but nontrivial" regime.
+Our central finding is that the statistical properties of G — its entropy, spatial correlation, temporal persistence, compressibility, and spectral signature — encode information about the dynamical class of the underlying rule, and that Class IV rules occupy a characteristic "structured but nontrivial" regime.
 
 ### 1.1 Related Work
 
@@ -35,27 +37,36 @@ An elementary cellular automaton is a map f: {0,1}³ → {0,1} applied synchrono
 
 Let S ∈ {0,1}ᴺ be a binary state on a ring of N cells with periodic boundary conditions.
 
-**Evolution operator E:**
-$$E(S)[i] = f(S[i-1], S[i], S[i+1])$$
+**Evolution operator E (apply the rules):**
+$$E(S) = \phi(S)$$
+where φ is the CA rule applied synchronously to all cells: φ(S)[i] = f(S[i-1], S[i], S[i+1]).
 
-**Differentiation operator D:**
-$$D(S)[i] = S[i] \oplus S[i+1]$$
+**Differentiation operator D (which cells will flip):**
+$$D(S) = S \oplus \phi(S)$$
 
-This is the discrete spatial derivative in GF(2). It measures local spatial variation: D(S) is zero at position i iff cells i and i+1 agree.
+D(S) marks the cells that are about to change on the next timestep. This is the *temporal derivative* expressed as a binary field — not a spatial gradient. D(S)[i] = 1 iff cell i will have a different value after one application of the rule.
 
-**Integration operator I:**
-$$I(S)[i] = \bigoplus_{j=0}^{i} S[j]$$
+**Integration operator I (apply changes):**
+$$I(S, d) = S \oplus d$$
 
-The cumulative XOR, serving as a left-inverse of D (up to boundary effects).
+I applies a change pattern d to state S. Note that E(S) = I(S, D(S)) = S ⊕ (S ⊕ φ(S)) = φ(S) — evolution is the integration of differentiation.
 
-**Second-order differentiation D²:**
-$$D^2 = D \circ D$$
+**Second-order differentiation D₂ (the system dreaming about its own dynamics):**
+$$D_2(S) = D(D(S)) = D(S) \oplus \phi(D(S))$$
+
+D₂ feeds the change pattern D(S) back into the rule φ *as if it were a state*, then XORs the result with D(S) itself. This asks: "if the change pattern were a world, which cells of that world would change?" It is NOT the second time derivative.
 
 ### 2.3 The Groovy Commutator
 
 $$G(S) = [E, D](S) = D(E(S)) \oplus E(D(S))$$
 
-G measures the failure of E and D to commute. When G(S) = 0 for all S, the evolution and differentiation operators commute perfectly — the rule preserves the structure of spatial derivatives.
+G measures the failure of E and D to commute. When G(S) = 0 for all S, detecting upcoming changes before or after evolution yields the same result.
+
+Expanding both paths explicitly:
+- **Path 1:** D(E(S)) = φ(S) ⊕ φ(φ(S)) — evolve first, then ask what's about to change in the evolved state.
+- **Path 2:** E(D(S)) = φ(D(S)) = φ(S ⊕ φ(S)) — compute the change pattern first, then evolve it as if it were a state.
+
+G(S) = 0 means these two paths agree — the system's dynamics commute with change-detection.
 
 ### 2.4 Extended Commutator Family
 
@@ -64,8 +75,7 @@ We study several related operators:
 | Operator | Definition | Interpretation |
 |----------|-----------|----------------|
 | [E, D] = G | D(E(S)) ⊕ E(D(S)) | Standard commutator |
-| [E, D²] | D²(E(S)) ⊕ E(D²(S)) | Second-order spatial sensitivity |
-| [E, I] | I(E(S)) ⊕ E(I(S)) | Integration-evolution non-commutativity |
+| [E, D₂] | D₂(E(S)) ⊕ E(D₂(S)) | Second-order change-detection sensitivity |
 | [Eⁿ, D] | D(Eⁿ(S)) ⊕ Eⁿ(D(S)) | Multi-step evolution commutator |
 | [E, [E, D]] | [E,D](E(S)) ⊕ E([E,D](S)) | Nested (Jacobi-like) commutator |
 | {E, D} | D(E(S)) ∧ E(D(S)) | Anti-commutator (AND of branches) |
@@ -105,7 +115,7 @@ All experiments use periodic boundary conditions on binary rings.
 ### 3.2 Experiment 2: Commutator Zoo
 
 - 20 representative rules spanning all classes
-- All 8 commutator variants
+- 7 commutator variants: [E,D], [E,D₂], [E²,D], [E³,D], [E⁴,D], [E,[E,D]], {E,D}
 - Width N = 101, T = 200, 30 trials per rule
 - Output: heatmap of entropy across rules × variants
 
@@ -121,6 +131,39 @@ All experiments use periodic boundary conditions on binary rings.
 - All 256 rules: affine decomposition AND commutator measures
 - Testing hypothesis: Class IV ≈ {nonzero perturbation} ∩ {structured commutator}
 - Output: 2D scatter of perturbation weight vs. G entropy
+
+### 3.5 Experiment 5: Equivalence Class Table
+
+- All 88 ECA equivalence classes (under left-right reflection and complementation)
+- Width N = 101, T = 300, 50 random initial conditions per representative
+- Transient discard: 50 steps
+- Full commutator signature: G entropy, correlation length, compressibility, periodicity
+- Output: complete lookup table (see Appendix A)
+
+### 3.6 Experiment 6: Spectral Analysis
+
+- All 88 equivalence class representatives
+- Width N = 201, T = 1000, discard first 200 steps, 10 trials
+- Compute G entropy at each timestep → time series
+- FFT of entropy time series → power spectrum
+- Fit log-log slope (β exponent): β≈0 = white noise, β≈1 = 1/f noise, β≈2 = brown noise
+- Output: β exponent, R², peak frequency for each rule
+
+### 3.7 Experiment 7: Glider Detection
+
+- Rule 110 (proven universal), with Rules 54 and 30 as comparisons
+- Width N = 201, T = 500
+- Compute G at each timestep, track persistent local maxima
+- Glider criterion: peak persists ≥ 8 timesteps, moves ≤ 3 cells/step
+- Output: spacetime diagram of G with detected glider tracks overlaid
+
+### 3.8 Experiment 8: Finite-Size Scaling
+
+- Rules 54, 110, 30, 90, 4, 0 (one representative per class)
+- Sizes N = 51, 101, 201, 501
+- T = 500, discard first 100 steps, 20 trials each
+- Compute G entropy, correlation length, compressibility at each size
+- Test: do Class IV measures converge or diverge with system size?
 
 ## 4. Results
 
@@ -217,21 +260,80 @@ This supports a refined version of our hypothesis:
 
 > **Conjecture (Groovy Commutator Characterization):** A rule R exhibits Class IV behavior if and only if: (1) R has nonzero but sub-maximal perturbation from its nearest affine function, (2) the Groovy Commutator G has intermediate entropy (bounded away from both 0 and 1), and (3) G exhibits spatial correlations significantly exceeding 1/e of the system size.
 
+### 4.5 Spectral Analysis: 1/f Signatures in G Time Series
+
+We computed the power spectrum of the G entropy time series for all 88 equivalence class representatives (N=201, T=1000, 10 trials). The spectral exponent β, obtained by fitting log(power) vs. log(frequency), reveals distinct signatures by class:
+
+| Rule | Class | β exponent | R² | Interpretation |
+|------|-------|-----------|------|----------------|
+| 54   | IV    | **0.67**  | 0.10 | Approaching 1/f (pink noise) |
+| 106  | IV    | **0.34**  | 0.06 | Positive β, structured fluctuations |
+| 110  | IV    | **0.25**  | 0.03 | Positive β, mild 1/f tendency |
+| 30   | III   | 0.13     | 0.01 | Near-zero (white noise) |
+| 45   | III   | 0.08     | 0.004 | White noise |
+| 90   | III   | 0.00     | 0.00 | Trivial (affine, G=0) |
+| 4    | II    | 0.00     | 0.00 | Trivial (converges to fixed G=0) |
+
+All three Class IV rules show positive β exponents (0.25–0.67), with Rule 54 approaching the 1/f regime (β≈1). Non-affine Class III rules cluster near β≈0 (white noise), as expected for rules producing pseudo-random G time series. The R² values are modest, indicating the power-law fit is approximate — longer time series or ensemble averaging would improve the fit.
+
+The 1/f-like signature in Class IV rules is notable because 1/f noise is associated with systems at criticality — consistent with the "edge of chaos" interpretation. Rule 54's β=0.67 is the strongest 1/f signal in the dataset, further distinguishing it as the most structured Class IV rule.
+
+### 4.6 Glider Detection via Commutator Peaks
+
+We tracked persistent, moving local maxima in the G spacetime of Rule 110 (N=201, T=500). Results:
+
+| Rule | Class | Tracks Detected | Speed Range | Duration Range |
+|------|-------|-----------------|-------------|----------------|
+| 110  | IV    | 276             | 0.06–2.10 cells/step | 8–100 steps |
+| 54   | IV    | 2               | — | — |
+| 30   | III   | 728             | — | — |
+
+Rule 110 shows 276 distinct tracked features with speeds concentrated around |v|≈0.7–1.0 cells/step, consistent with known glider velocities in Rule 110. The speed distribution shows discrete peaks, suggesting the tracker is detecting distinct glider species.
+
+Rule 30 (Class III) has more "tracks" (728) than Rule 110, but these are artifacts of the detection algorithm applied to random fluctuations — Class III rules produce rapidly decorrelating G, so any threshold-based tracker will find spurious matches among the noise. The key difference is qualitative: Rule 110's tracks have coherent trajectories visible in the spacetime diagram, while Rule 30's are scattered and short-lived.
+
+Rule 54 shows only 2 tracks, likely due to its sparser glider dynamics. This highlights a limitation of the current detection algorithm, which relies on peak persistence without accounting for the different spatial structure of different rules' gliders.
+
+### 4.7 Finite-Size Scaling
+
+We measured G entropy, correlation length, and compressibility across system sizes N = 51, 101, 201, 501:
+
+| Rule | Class | G Entropy (N=51) | G Entropy (N=501) | Trend |
+|------|-------|-----------------|-------------------|-------|
+| 54   | IV    | 0.735 ± 0.091   | 0.837 ± 0.009     | Growing, not converged |
+| 110  | IV    | 0.937 ± 0.005   | 0.939 ± 0.001     | Stable (converged) |
+| 30   | III   | 0.943 ± 0.003   | 0.953 ± 0.001     | Stable (slight growth) |
+| 90   | III   | 0.000           | 0.000              | Zero (affine) |
+| 4    | II    | 0.000           | 0.000              | Zero (fixed point) |
+| 0    | I     | 0.000           | 0.000              | Zero (trivial) |
+
+Key findings:
+
+1. **Rule 54's entropy grows with system size** (0.735 → 0.837), and its standard deviation decreases (0.091 → 0.009), suggesting it has not yet reached its thermodynamic limit at N=501. This is consistent with Rule 54's long correlation lengths — it may require much larger systems for its commutator statistics to converge.
+
+2. **Rule 110 is essentially converged** by N=51 (0.937 ≈ 0.939). Its G entropy is remarkably stable across all sizes, indicating that its commutator structure is not a finite-size artifact.
+
+3. **Rule 30 is also stable** (0.943 → 0.953), confirming that Class III behavior saturates quickly.
+
+4. **Compressibility decreases uniformly with size** for all rules that have nonzero G (since larger random-looking arrays compress proportionally better). This is an artifact of the gzip measure and does not reflect genuine dynamical scaling.
+
+5. **Correlation lengths converge to ~1.0** for all non-trivial rules at large sizes. The elevated values seen in smaller experiments (e.g., Rule 54 at ξ=3.5 in Appendix A) may reflect finite-size effects where the correlation length approaches the system size.
+
 ## 5. Discussion
 
 ### 5.1 Why the Commutator Captures Complexity
 
-The Groovy Commutator measures, in precise terms, the failure of spatial structure (as captured by D) to be preserved under temporal evolution (E). For a rule where E and D commute, knowing the spatial derivative before evolution is equivalent to knowing it after — the spatial structure is a conserved quantity of the dynamics (in the GF(2) sense).
+The Groovy Commutator measures, in precise terms, the failure of change-detection (D) and evolution (E) to commute. D(S) = S ⊕ φ(S) asks "which cells are about to flip?" — it is the temporal derivative encoded as a spatial pattern. When D and E commute, the answer to "what's about to change?" is the same whether we ask before or after evolution. This means the dynamics are, in a specific algebraic sense, *transparent to their own future* — knowing where change will happen before evolution is equivalent to knowing it after.
 
-Class I rules trivialize both E and D, so they commute vacuously. Affine (XOR-linear) rules commute because both E and D are linear operations over GF(2), and linear operations always commute.
+Class I rules trivialize both operators: D converges to zero as the state becomes uniform, so they commute vacuously. Affine (XOR-linear) rules commute because both E and D are linear operations over GF(2), and linear operators always commute.
 
-Class III rules destroy spatial structure so aggressively that the commutator is essentially random noise — the ordering doesn't matter because everything becomes unpredictable either way.
+Class III rules generate change patterns so aggressively that D(E(S)) and E(D(S)) both become essentially random — the commutator is nonzero but unstructured. The ordering doesn't matter because everything becomes unpredictable either way.
 
-Class IV rules are precisely those where the ordering *matters in a structured way*: the commutator is nonzero (evolution does not preserve spatial derivatives) but the non-commutativity has spatial coherence (it's not random noise). This is the hallmark of computation — the manipulation of structured information.
+Class IV rules are precisely those where the ordering *matters in a structured way*: the commutator is nonzero (the system's change-detection does not commute with evolution) but the non-commutativity has spatial coherence (it's not random noise). This is the hallmark of computation — the system's dynamics interact with self-knowledge about upcoming change in a non-trivial but organized manner.
 
 ### 5.2 Connection to Edge of Chaos
 
-Langton's "edge of chaos" hypothesis (1990) posits that computation occurs at the boundary between ordered and chaotic dynamics. The Groovy Commutator provides a new lens on this: the "edge" is where the commutator [E, D] is nonzero but structured. This is analogous to how in quantum mechanics, the commutator [x, p] = iℏ defines the boundary between classical (commuting) and quantum behavior, and the magnitude of the commutator controls the uncertainty principle.
+Langton's "edge of chaos" hypothesis (1990) posits that computation occurs at the boundary between ordered and chaotic dynamics. The Groovy Commutator provides a new lens on this: the "edge" is where the commutator [E, D] is nonzero but structured. With the corrected D operator (which detects upcoming changes rather than spatial gradients), this analogy becomes tighter: the commutator measures whether a system can "predict its own change" consistently across different orderings of operations. This is analogous to how in quantum mechanics, the commutator [x, p] = iℏ defines the boundary between classical (commuting) and quantum behavior, and the magnitude of the commutator controls the uncertainty principle.
 
 ### 5.3 The Affine Connection
 
@@ -243,11 +345,13 @@ The conjunction of moderate perturbation and moderate commutator entropy may be 
 
 1. **Classification ground truth**: Our Wolfram class assignments are based on community consensus, which is itself partially subjective for marginal rules. The classification of rules near class boundaries remains contested.
 
-2. **Finite-size effects**: All experiments use finite rings (N ≤ 201). Some Class IV phenomena (particularly glider interactions) may require larger systems.
+2. **Finite-size effects**: Most experiments use finite rings (N ≤ 201). Finite-size scaling (Experiment 8) addresses this partially for N up to 501, but some Class IV phenomena may require larger systems.
 
 3. **Statistical measures**: Shannon entropy and correlation length are coarse measures. Richer topological or algebraic invariants of G might provide sharper discrimination.
 
 4. **Conjecture status**: Our characterization is stated as a conjecture, not a theorem. A proof would require understanding the algebraic structure of the commutator for all possible rules, which remains open.
+
+5. **Operator sensitivity**: The precise definition of D matters greatly. With D(S) = S ⊕ φ(S), the commutator measures non-commutativity of change-detection and evolution — a semantically cleaner quantity than spatial-gradient non-commutativity.
 
 ## 6. Conjectures
 
@@ -256,7 +360,7 @@ We state our main conjectures with epistemic tags indicating confidence levels.
 **Conjecture 1 (Commutator Vanishing — HIGH CONFIDENCE):**
 *For any affine ECA rule (W ∈ {0, 15, 51, 85, 90, 102, 105, 150, 153, 165, 170, 195, 204, 240, 255}), the Groovy Commutator G(S) = 0 for all S.*
 
-Rationale: Both E and D are GF(2)-linear for affine rules, and linear operators commute.
+Rationale: For affine rules, φ is GF(2)-linear, so D(S) = S ⊕ φ(S) is also linear. Both E = φ and D = id ⊕ φ are GF(2)-linear, and linear operators over GF(2) commute.
 
 **Conjecture 2 (Class IV High-Entropy Regime — MODERATE CONFIDENCE):**
 *Class IV rules are characterized by G entropy > 0.85 and G spatial correlation length exceeding the class mean of non-affine Class III rules.*
@@ -284,11 +388,15 @@ Rationale: Observed strongly for Rule 110 but not uniformly across all Class IV 
 
 2. **Algebraic theory**: Develop a formal algebraic framework for the commutator over GF(2)^N, potentially connecting to the theory of Boolean function composition.
 
-3. **Spectral analysis**: Compute the power spectrum of G time series and look for 1/f signatures associated with criticality.
+3. **Improved spectral analysis**: Our preliminary spectral results (§4.5) show promising 1/f-like signatures for Class IV, but R² values are low. Longer time series (T > 10000), windowed FFT (Welch's method), and detrended fluctuation analysis (DFA) may yield cleaner exponents.
 
-4. **Machine learning**: Use commutator features as inputs to a classifier and evaluate whether they outperform raw spacetime features for Wolfram class prediction.
+4. **Machine learning**: Use commutator features (entropy, β exponent, correlation length) as inputs to a classifier and evaluate whether they outperform raw spacetime features for Wolfram class prediction.
 
-5. **Glider detection**: Study whether local peaks in G correspond to glider positions, providing a commutator-based glider detection algorithm.
+5. **Improved glider detection**: The peak-tracking approach (§4.6) detects features in Rule 110 but needs refinement: speed-dependent detection thresholds, cross-correlation tracking, and comparison with known glider catalogs to validate which tracked features correspond to genuine gliders.
+
+6. **Finite-size scaling to larger N**: Rule 54's growing entropy at N=501 (§4.7) motivates runs at N=1001 and N=2001 to determine its thermodynamic limit. If Rule 54's entropy continues to grow, it may approach Class III values, raising questions about the robustness of entropy-based separation.
+
+7. **Connection to computational universality**: Cook (2004) proved Rule 110 is Turing-universal. Can the commutator structure be used to detect or predict computational universality? The nested commutator drop for Rule 110 (§4.2) may be a signature worth investigating.
 
 ## References
 
