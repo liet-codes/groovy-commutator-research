@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import csv
 from src.eca import step
-from src.operators import G as groovy_commutator_op
+from src.operators import G as groovy_commutator_op, D, phi
 from src.measures import shannon_entropy, spatial_correlation_length, compressibility_ratio as compressibility
 from src.affine import affine_decompose
 
