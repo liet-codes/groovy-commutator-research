@@ -98,3 +98,22 @@ D, I, C all return configuration spaces of the same dimensionality as the input.
 - Update this PLAN.md when done
 - Git commit and push
 - Report significant findings to Discord #general
+
+## Language Migration Plan
+- **Current**: Python (numpy/scipy/matplotlib) — fine for ECA-scale experiments (256 rules, 88 equivalence classes)
+- **Target**: Julia for production pipeline when scaling to n=4 (65,536 rules × 26 types) and n=5 (4.3B rules)
+- **Why Julia**: Native speed for tight CA loops, BitArrays, multiple dispatch for interaction graph types, CUDA.jl for GPU sweeps, built-in parallelism
+- **Python stays** as prototyping/visualization layer
+- Suggested by Brooklyn (domain expert)
+
+## Brooklyn's 5-Part Research Program
+1. ✅ **Interaction Graphs paper** (Part 1) — comprehensive catalog of CA types, shared rule spaces, tractability boundaries
+2. **Isomorphisms paper** (Part 2) — isomorphisms between CA types and other computational systems (Turing machines, tag systems, substitution systems)
+3. **Universality paper** (Part 3) — catalog all proven universal CAs, trace isomorphisms, propose tiered universality test
+4. **Non-universality paper** (Part 4) — catalog proven non-universal CAs, characterize "definitely dead" regions algebraically
+5. **Grand Unified Experiment** (Part 5) — enumerate full tractable space, measure everything, segment continuum from non-universal to universal
+
+### GC Repo's Role
+- Serves Parts 3-5 directly (commutator as one measurement in the battery)
+- Cross-interaction-graph experiment feeds Part 2 (same rule on different graphs)
+- Equivalence class table expandable to n=4 and n=5
