@@ -9,7 +9,7 @@
 - [x] Experiment 3: Class IV hunt (extended runs)
 - [x] Experiment 4: Affine × commutator analysis
 - [x] Paper draft v1: definitions, results, conjectures
-- [ ] Experiment 5: 88 equivalence class lookup table (WRITTEN, NOT YET RUN)
+- [x] Experiment 5: 88 equivalence class lookup table — complete, results confirm all conjectures across 88 classes
 
 ## Key Findings So Far
 1. Class IV rules have highest mean G entropy (0.892) with tightest std (0.079)
