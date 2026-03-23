@@ -69,11 +69,32 @@ The differentiation operator D was fixed from spatial adjacency XOR to D(S) = S 
 - The 770 "tracks" in Rule 30 — can we develop a false-positive rejection criterion?
 - Connection to Brooklyn's SAT phase transition: is the commutator measuring constraint density?
 
-## Heartbeat Tasks
-When running on heartbeat cycles:
-1. Check if any experiments need re-running with updated parameters
-2. Try improved spectral methods (Welch, DFA)
-3. Run larger scaling experiments (N=1001+) for Rule 54
-4. Investigate Class II high-entropy outliers (Rules 24, 35)
-5. Update paper with any new results
-6. Always update this PLAN.md when done
+## Heartbeat Protocol
+Cycles alternate: **BUILD** (add experiments, run code) → **AUDIT** (review claims, check rigor, prune speculation).
+
+### BUILD cycle tasks (pick one per cycle):
+1. Try improved spectral methods (Welch, DFA) for cleaner β estimates
+2. Run larger scaling experiments (N=1001+) for Rule 54
+3. Investigate Class II high-entropy outliers (Rules 24, 35)
+4. **D-as-input experiment**: Feed D(S) back as input to the rule — CA with self-awareness of its own dynamics. Does this produce fixed points, novel oscillations, or emergent memory?
+5. **Novel operator compositions**: Explore D(I(S,d)), C(D(S), D₂(S)), I(S, G(S)), etc. Look for replicable structure that "shouldn't make sense."
+6. **Multi-feature classifier**: Combine G entropy + spectral β + perturbation weight + nested ratio for Class IV prediction
+7. Extend to 2D CA or larger rule spaces
+
+### AUDIT cycle tasks:
+1. Review all conjectures — are they supported by the corrected data?
+2. Check for overclaiming in the paper
+3. Verify experimental methodology (sample sizes, statistical significance)
+4. Ensure PLAN.md is current
+5. Clean up code quality, add docstrings, ensure reproducibility
+
+### North Star
+**An algorithmic Class IV detector.** Everything serves this goal.
+
+### Guiding Principle
+D, I, C all return configuration spaces of the same dimensionality as the input. This means arbitrary composition is well-typed. Explore the operator algebra freely — novel compositions and playful exploration may be rewarded. We're looking for replicable behavior that shouldn't make sense.
+
+### Always:
+- Update this PLAN.md when done
+- Git commit and push
+- Report significant findings to Discord #general
