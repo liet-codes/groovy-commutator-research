@@ -1,59 +1,79 @@
 # PLAN.md — Current Status and Next Steps
 
-*Last updated: 2026-03-22 (Cycle 2)*
+*Last updated: 2026-03-22 (Cycle 3 — Post D operator correction)*
+
+## Critical Change: D Operator Corrected
+The differentiation operator D was fixed from spatial adjacency XOR to D(S) = S ⊕ φ(S) (which cells are about to flip). **All experiments re-run with corrected operator.** All results below use the corrected definition.
 
 ## Completed
 - [x] Core library: ECA engine, operators, measures, affine decomposition
-- [x] Experiment 1: Baseline characterization (all 256 rules)
-- [x] Experiment 2: Commutator zoo (8 variants × 20 rules)
-- [x] Experiment 3: Class IV hunt (extended runs)
-- [x] Experiment 4: Affine × commutator analysis
-- [x] Paper draft v1: definitions, results, conjectures
-- [x] Experiment 5: 88 equivalence class lookup table — confirms all conjectures across 88 classes
-- [x] Paper Appendix A: equivalence table with analysis
-- [x] Experiment 6: Spectral analysis of G time series — 1/f signatures found for Class IV
-- [x] Experiment 7: Glider detection via G peaks — 276 tracks in Rule 110
-- [x] Experiment 8: Finite-size scaling (N=51–501) — Rule 54 not converged, Rule 110 stable
-- [x] Paper updated with all exp6-8 results (sections 4.5-4.7, updated future directions)
+- [x] **D operator fix**: D(S) = S ⊕ φ(S) in `src/operators.py` (commit 695c427)
+- [x] Experiment 1: Baseline characterization (all 256 rules) — re-run
+- [x] Experiment 2: Commutator zoo (7 variants × 20 rules) — re-run, [E,I] removed
+- [x] Experiment 3: Class IV hunt (extended runs) — re-run
+- [x] Experiment 4: Affine × commutator analysis — re-run
+- [x] Experiment 5: 88 equivalence class lookup table — re-run
+- [x] Experiment 6: Spectral analysis of G time series — re-run
+- [x] Experiment 7: Glider detection via G peaks — re-run
+- [x] Experiment 8: Finite-size scaling (N=51–501) — re-run
+- [x] Paper updated with all corrected results, operator correction note, revised conjectures
 
-## Key Findings (Cumulative)
-1. Class IV rules have highest mean G entropy (0.892) with tightest std (0.079)
-2. Class IV has longest correlation lengths (1.63 mean); Rule 54 peaks at 3.50
-3. No Class IV rule is affine (0% vs 27% of Class III)
-4. Nested commutator [E,[E,D]] drops significantly for Rule 110 (0.973 → 0.713)
-5. Multi-step [Eⁿ,D] grows for Class IV but saturates for Class III
-6. Conjecture 1 confirmed: all affine rules have G=0 across all 88 equivalence classes
-7. **NEW (Cycle 2)**: Class IV rules show positive spectral β exponents (0.25–0.67), suggesting 1/f-like noise; Class III β≈0 (white noise)
-8. **NEW (Cycle 2)**: Rule 54 has strongest 1/f signal (β=0.67) — most structured Class IV rule
-9. **NEW (Cycle 2)**: 276 glider tracks detected in Rule 110 via G peaks, speeds 0.06–2.10 cells/step
-10. **NEW (Cycle 2)**: Rule 54 entropy grows with system size (0.73→0.84 at N=501), not yet converged; Rule 110 converges by N=51
+## Key Findings (Corrected D Operator)
+1. Class IV rules have mean G entropy 0.842±0.217; Class II dropped to 0.368±0.361 (many now G=0)
+2. 22 of 65 Class II equivalence class representatives now have G=0 (up from ~0 with old operator)
+3. Correlation lengths collapsed to ~1.0 across all classes — no longer discriminates Class IV
+4. No Class IV rule is affine (0% vs 27% of Class III); Conjecture 1 confirmed (affine ⟹ G=0)
+5. Nested commutator [E,[E,D]] drop for Rule 110: 0.938→0.910 (less dramatic than old 0.973→0.713)
+6. Some Class II rules have surprisingly high G entropy: Rule 24 (0.974), Rule 35 (0.992)
+7. Rule 110 spectral β=0.696 (strongest 1/f signal); Rule 54 β=-0.034 (nearly white noise!)
+8. Rule 106 β=0.396, Class IV mean β≈0.352
+9. Glider tracks: Rule 110: 564, Rule 54: 394, Rule 30: 770
+10. Rule 54 entropy grows with system size (0.735→0.837); Rule 110 stable at ~0.939
+
+## Revised Conjectures
+- **Conjecture 1** (confirmed): All affine rules have G≡0
+- **Conjecture 2**: Class IV ⟹ G entropy in (0.3, 1.0) with nonzero perturbation weight (threshold lowered from 0.5)
+- **Conjecture 3**: Nested commutator [E,[E,D]] entropy < [E,D] entropy for Class IV (still holds)
+- **Conjecture 4**: Class IV spectral β > 0.2 (holds for Rules 110, 106; fails for Rule 54)
+- **Conjecture 5**: Glider-bearing rules have ≥100 detected G-peak tracks (holds for all tested rules, but high false positives in Class III Rule 30)
+
+## Key Changes from Old Results
+| Metric | Old (spatial XOR) | New (D = S⊕φ(S)) |
+|---|---|---|
+| Class IV G entropy | 0.892±0.079 | 0.842±0.217 |
+| Class II G entropy | 0.647 | 0.368±0.361 |
+| Rule 4 G entropy | 0.803 | 0.000 |
+| Correlation lengths | Class IV elevated (1.63 mean) | ~1.0 across all classes |
+| Rule 54 spectral β | 0.67 | -0.034 |
+| Rule 110 spectral β | ~0.25 | 0.696 |
+| Rule 110 glider tracks | 276 | 564 |
 
 ## Immediate Next Steps
-1. **Longer spectral runs**: T=10000 or T=50000 to get cleaner β estimates with higher R²
-2. **Welch/DFA spectral methods**: Replace raw FFT with Welch's method or detrended fluctuation analysis
-3. **Improved glider detection**: Speed-dependent thresholds, cross-correlation tracking
-4. **Larger scaling runs**: N=1001, N=2001 for Rule 54 to find its thermodynamic limit
-5. **Validate glider tracks**: Compare detected Rule 110 tracks with known glider catalogs
+1. **Resolve Class II contamination**: Investigate why Rules 24, 35 have G entropy >0.97 (higher than some Class IV rules). May need additional features beyond entropy alone.
+2. **Longer spectral runs**: T=10000+ to get cleaner β estimates; current β for Rule 54 is suspiciously low.
+3. **Welch/DFA spectral methods**: Replace raw FFT with more robust methods.
+4. **Correlation length alternatives**: Since spatial corr length collapsed to ~1.0, try block entropy correlation or mutual information at various lags.
+5. **Larger scaling runs**: N=1001+ for Rule 54 to find thermodynamic limit.
 
 ## Medium-Term
-6. **Machine learning classifier**: Use commutator features (entropy, β, corr length) for Wolfram class prediction
+6. **Multi-feature classifier**: Use commutator entropy + spectral β + perturbation weight + nested commutator ratio for Wolfram class prediction
 7. **2D CA**: Extend commutator analysis to 2-state 2D totalistic rules
 8. **Algebraic proof**: Prove Conjecture 1 formally (commutator vanishing for affine rules over GF(2))
-9. **Connection to universality**: Investigate if nested commutator drop predicts computational universality
+9. **Rule 54 anomaly**: Understand why Rule 54 shows white-noise spectrum despite being Class IV
 
 ## Open Questions
-- Why does Rule 54 show growing entropy with system size while Rule 110 converges? Does Rule 54 eventually approach Class III entropy?
-- Why does the nested commutator drop for Rule 110 but not Rule 54? Is there sub-structure within Class IV?
-- Can the spectral β exponent serve as a standalone Class IV discriminator?
-- The 728 "tracks" in Rule 30 — can we develop a false-positive rejection criterion to distinguish genuine gliders from noise?
+- Why do some Class II rules (24, 35) have very high G entropy? Are they misclassified, or does G entropy alone not suffice?
+- Why did correlation lengths collapse to ~1.0 with the corrected D? The old operator created artificial spatial structure.
+- Rule 54's spectral β ≈ 0 is surprising — is this a finite-size/finite-time artifact, or genuinely white noise in its commutator?
+- Can we combine G entropy + spectral β + perturbation weight into a robust 3D Class IV discriminator?
+- The 770 "tracks" in Rule 30 — can we develop a false-positive rejection criterion?
 - Connection to Brooklyn's SAT phase transition: is the commutator measuring constraint density?
-- Does the 1/9 universal tiling ratio (Patrick's result) show up in commutator statistics?
 
 ## Heartbeat Tasks
 When running on heartbeat cycles:
 1. Check if any experiments need re-running with updated parameters
 2. Try improved spectral methods (Welch, DFA)
 3. Run larger scaling experiments (N=1001+) for Rule 54
-4. Try new commutator variants suggested in RESEARCH.md
+4. Investigate Class II high-entropy outliers (Rules 24, 35)
 5. Update paper with any new results
 6. Always update this PLAN.md when done
